@@ -19,10 +19,10 @@ def isPasswordValid_new(policy: Policy, password: str):
         return 1
     return 0
 
-def parseLine(line, legacy = True):
+def parseLine(line: str, legacy = True):
     m, l, password = line.split()
-    a, b = (int(x) for x in m.split('-'))
-    letter = l[0]
+    a, b = [int(x) for x in m.split('-')]
+    letter = l[0] # remove the extra :
     policy = Policy(a, b, letter)
     if legacy:
         return isPasswordValid_old(policy, password)
