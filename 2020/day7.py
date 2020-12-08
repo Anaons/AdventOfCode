@@ -17,41 +17,84 @@ sample = [
 "dotted black bags contain no other bags.",
 ]
 
-tree = dict()
+sample2 = [
+"shiny gold bags contain 2 dark red bags.",
+"dark red bags contain 2 dark orange bags.",
+"dark orange bags contain 2 dark yellow bags.",
+"dark yellow bags contain 2 dark green bags.",
+"dark green bags contain 2 dark blue bags.",
+"dark blue bags contain 2 dark violet bags.",
+"dark violet bags contain no other bags.",
+]
 
-def parseLine(line):
-    elts = line.split()
-    bag_color = elts[0] + " " + elts[1]
-    _, sub = line.split(" contain ")
-    if sub != "no other bags.":
-        colors = sub.split(',')
-        for color in colors:
-            color = color.split()
-            colorname = color[1] + " " + color[2]
-            tree.setdefault(colorname, set()).add(bag_color)
+def parseInput_1(lines: list):
+    '''the keys in the dict are the contained bags, and the values are the bags that contain the key'''
 
-def parseInput(lines):
+    # build tree
+    tree = dict()
     for line in lines:
-        parseLine(line)
+        container, content = line.split(' contain ')
+        container = container.split()
+        containerColor = container[0] + " " + container[1]
 
+        bags = content.split(',')
+        for bag in bags:
+            bag = bag.split()
+            color = bag[1] + " " + bag[2]
+            tree.setdefault(color, set()).add(containerColor)
+
+    # count possible containers
+    toVisit = tree["shiny gold"]
     result = set()
-    colors = tree['shiny gold'] # that's a set
-    for color in colors:
-        addToSet(result, color)
+    while len(toVisit) > 0:
+        color = toVisit.pop()
+        if color not in result:
+            toVisit = toVisit.union(tree.get(color, set()))
+        result.add(color)
 
+    # return answer
     return len(result)
 
-def addToSet(result, color):
-    result.add(color)
+def parseInput_2(lines: list):
+    '''quite similar to part 1 but we build the dictionnary in the other way'''
 
-    colors = tree.get(color, set())
-    for color in colors:
-        if color not in result:
-            addToSet(result, color)
-    result = result.union(colors)
+    # build tree
+    tree = dict()
+    for line in lines:
+        container, contents = line.split(' contain ')
+        container = container.split()
+        containerColor = container[0] + " " + container[1]
+
+        content = dict()
+        if contents != "no other bags.":
+            bags = contents.split(',')
+            for bag in bags:
+                bag = bag.split()
+                count = int(bag[0])
+                color = bag[1] + " " + bag[2]
+                content[color] = count
+        tree[containerColor] = content
+
+    # count possible containers
+    result = getBagsCount(tree, "shiny gold")
+
+    # return answer (shiny gold bag does not count)
+    return result - 1
+
+def getBagsCount(tree: dict, bagColor: str):
+    r = 1 # count current bag
+    bags = tree[bagColor]
+    for bag in bags:
+        r+= bags[bag] * getBagsCount(tree, bag)
+    return r
 
 # sample
-print("Sample, should be 4:", parseInput(sample))
+print("Sample, should be 4:", parseInput_1(sample))
+print("Sample, should be 32:", parseInput_2(sample))
+print("Sample, should be 126:", parseInput_2(sample2))
 
 # part 1
-print("part 1 answer:", parseInput(values))
+print("part 1 answer:", parseInput_1(values))
+
+# part 2
+print("part 2 answer:", parseInput_2(values))
